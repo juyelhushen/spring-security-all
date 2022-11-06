@@ -1,24 +1,19 @@
 package com.jskool.security.security;
 
+import com.jskool.security.auth.AppUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.jskool.security.security.UserPermission.COURSE_WRITE;
-import static com.jskool.security.security.UserPermission.STUDENT_WRITE;
 import static com.jskool.security.security.UserRole.*;
 
 @Configuration
@@ -27,13 +22,19 @@ import static com.jskool.security.security.UserRole.*;
 public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final PasswordEncoder passwordEncoder;
+    private final AppUserDetailsService appUserDetailsService;
 
-    public AppSecurityConfig(PasswordEncoder passwordEncoder) {
+    public AppSecurityConfig(PasswordEncoder passwordEncoder, AppUserDetailsService appUserDetailsService) {
         this.passwordEncoder = passwordEncoder;
+        this.appUserDetailsService = appUserDetailsService;
     }
 
-
     @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(daoAuthenticationProvider());
+    }
+
+    /*@Override
     @Bean
     protected UserDetailsService userDetailsService() {
         UserDetails semaUser = User.builder()
@@ -56,12 +57,9 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
                // .roles(ADMINTRAINEE.name())
                 .authorities(ADMINTRAINEE.getSimpleGrantedAuthorities())
                 .build();
-
-
-
-        return new InMemoryUserDetailsManager(semaUser,juyelUser,adminTrainee);
-    }
-
+             return new InMemoryUserDetailsManager(semaUser,juyelUser,adminTrainee);
+      }
+*/
 
 
     @Override
@@ -83,10 +81,13 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
                 .formLogin()
                    .loginPage("/login").permitAll()
                    .defaultSuccessUrl("/couarses",true)
+                .usernameParameter("username")
+                .passwordParameter("password")
                 .and()
                 .rememberMe()
                    .tokenValiditySeconds((int) TimeUnit.HOURS.toSeconds(20))
                    .key("secured")
+                .rememberMeParameter("remember-me")
                 .and()
                 .logout()
                    .logoutUrl("/logout")
@@ -96,5 +97,13 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
                    .deleteCookies("JSESSIONID","remember-me")
                    .logoutSuccessUrl("/login");
 
+    }
+
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(passwordEncoder);
+        provider.setUserDetailsService(appUserDetailsService);
+        return provider;
     }
 }
