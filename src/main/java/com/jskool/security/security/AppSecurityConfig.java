@@ -9,8 +9,11 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import javax.crypto.SecretKey;
 
 import java.util.concurrent.TimeUnit;
 
@@ -21,8 +24,12 @@ import static com.jskool.security.security.UserRole.*;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 
+
+
+
     private final PasswordEncoder passwordEncoder;
     private final AppUserDetailsService appUserDetailsService;
+
 
     public AppSecurityConfig(PasswordEncoder passwordEncoder, AppUserDetailsService appUserDetailsService) {
         this.passwordEncoder = passwordEncoder;
@@ -66,18 +73,16 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
 
         http
-                .csrf().disable()
-//                .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-//                .and()
+
+                .csrf().disable()//.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .authorizeRequests()
-                .antMatchers("/","index","/css/**")
-                .permitAll()
+                .antMatchers("/","index","/css/**","/login").permitAll()
                 .antMatchers("/api/**").hasRole(STUDENT.name())
 //                .antMatchers(HttpMethod.POST,"/management/api").hasAuthority(COURSE_WRITE.getPermission())
 //                .antMatchers(HttpMethod.PUT,"/management/api").hasAuthority(COURSE_WRITE.getPermission())
 //                .antMatchers(HttpMethod.GET,"/management/api").hasAnyRole(ADMIN.name(), ADMINTRAINEE.name())
                 .anyRequest()
-                .authenticated().and()
+                .authenticated().and() 
                 .formLogin()
                    .loginPage("/login").permitAll()
                    .defaultSuccessUrl("/couarses",true)
@@ -85,7 +90,7 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
                 .passwordParameter("password")
                 .and()
                 .rememberMe()
-                   .tokenValiditySeconds((int) TimeUnit.HOURS.toSeconds(20))
+                   .tokenValiditySeconds((int) TimeUnit.SECONDS.toSeconds(20))
                    .key("secured")
                 .rememberMeParameter("remember-me")
                 .and()

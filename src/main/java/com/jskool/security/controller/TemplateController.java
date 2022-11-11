@@ -18,4 +18,9 @@ public class TemplateController {
     public String getCoarses() {
         return "couarses";
     }
+
+    @GetMapping("security/ht")
+    public String getCoarseSecurity() {
+        return "security";
+    }
 }

@@ -1,0 +1,10 @@
+#application:
+#  jwt:
+#    secretKey: jwtsecrettokenfeve65etgrtgtrgtbbbtrbgdfvrtgrtt5tgrtbvttvf
+#    tokenPrefix: Bearer
+#    tokenExpirationAfterDays: 10
+
+server:
+  servlet:
+    session:
+      timeout: 61s
